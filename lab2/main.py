@@ -154,7 +154,7 @@ def valid_colors_from(node: Node | None):
             and valid_colors_from(node.right))
 
 
-def test():
+def demo_red_black_tree():
     t = RBTree(10)
     t.insert(5)
     t.insert(12)
@@ -220,10 +220,68 @@ def task1():
     print(f"Разница поиска дерево/список: {tree_dur/lst_dur}")
     print(f"Результаты поиска элементов равны: {tree_has == lst_has}")
 
+def task2():
+    def parse(s: str) -> list[int | str]:
+        tokens = []
+        i = 0
+        while i < len(s):
+            if s[i].isspace():
+                i += 1
+            elif s[i].isdigit():
+                j = i
+                while j < len(s) and s[j].isdigit():
+                    j += 1
+                tokens.append(int(s[i:j]))
+                i = j
+            else:
+                tokens.append(s[i])
+                i += 1
+        return tokens
+
+    def calculate_from_low(tokens: list, pos: int):
+        val, pos = calculate_high(tokens, pos)
+        while pos < len(tokens) and tokens[pos] in ('+', '-'):
+            op = tokens[pos]
+            pos += 1
+            right, pos = calculate_high(tokens, pos)
+            val = val + right if op == '+' else val - right
+        return val, pos
+
+    def calculate_high(tokens: list, pos: int):
+        val, pos = get_atom(tokens, pos)
+        while pos < len(tokens) and tokens[pos] in ('*', '/'):
+            op = tokens[pos]
+            pos += 1
+            right, pos = get_atom(tokens, pos)
+            if op == '*':
+                val = val * right
+            else:
+                val = int(val / right)
+        return val, pos
+
+    def get_atom(tokens: list, pos: int):
+        tok = tokens[pos]
+        if isinstance(tok, int):
+            return tok, pos + 1
+        if tok == '(':
+            val, pos = calculate_from_low(tokens, pos + 1)
+            assert tokens[pos] == ')', "не нашлась закрывающая скобка"
+            return val, pos + 1
+        raise ValueError(f"неожиданный токен: {tok!r}")
+
+    while True:
+        s = input("Введите выражение (или 'q' для выхода): ").strip()
+        if s == 'q':
+            break
+        tokens = parse(s)
+        result, _ = calculate_from_low(tokens, 0)
+        print(f"= {result}")
+
+
 def main():
-    # test()
+    # demo_red_black_tree()
     task1()
-    pass
+    task2()
 
 
 if __name__ == "__main__":
