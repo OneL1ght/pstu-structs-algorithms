@@ -1,4 +1,5 @@
 import random
+import math
 from typing import Callable, Any
 
 
@@ -164,11 +165,84 @@ def exc2():
     word = input("Введите слово: ")
     continue_sentence(bigrams, word, 5)
 
+def hash_word(w: str) -> float:
+    if not w:
+        return 0.0
+
+    step = 2 * math.pi / 26
+    letter_angle = lambda c: step * (ord(c.lower()) - ord('a'))
+
+    result = letter_angle(w[0])
+    for i, ch in enumerate(w[1:]):
+        weight = 1 / (i + 2)
+        target = letter_angle(ch)
+        clockwise = (target - result) % (2 * math.pi)
+        current = -(2 * math.pi - clockwise) if clockwise > math.pi else clockwise
+        current *= weight
+        result  += current
+    return result
+
+
+def interactive_test_hash_word():
+    w = input("Введите слово (или пробел для завершения): ")
+    words = {}
+    while w != ' ':
+        curr_hash = hash_word(w)
+        if curr_hash in words.keys():
+            print(f'Ключ "{curr_hash}" уже существует')
+        else:
+            print(f'Добавлено!')
+            words[curr_hash] = w
+        w = input("Введите слово (или пробел для завершения): ")
+    print("Созданный словарь:")
+    for k, v in words.items():
+        print(f"{k} = {v}")
+
+
+def compare_collisions(filepath: str):
+    """
+    Тест на файле assets/lab1exc3_wiki_hash_function.txt:
+
+    Уникальных слов: 580
+    Коллизий hash_word:    114
+    Коллизий hash (builtin): 0
+    """
+    with open(filepath, 'r') as f:
+        words = txt2words(f.read())
+
+    unique_words = list(set(words))
+
+    def count_collisions(hash_fn):
+        seen = {}
+        collisions = 0
+        for w in unique_words:
+            h = hash_fn(w)
+            if h in seen:
+                collisions += 1
+            else:
+                seen[h] = w
+        return collisions
+
+    our_collisions = count_collisions(hash_word)
+    builtin_collisions = count_collisions(hash)
+
+    print(f"Уникальных слов: {len(unique_words)}")
+    print(f"Коллизий hash_word:    {our_collisions}")
+    print(f"Коллизий hash (builtin): {builtin_collisions}")
+
+
+def exc3():
+    interactive_test_hash_word()
+    print()
+    compare_collisions("assets/lab1exc3_wiki_hash_function.txt")
+
 
 def lab1():
     exc1()
     print()
     exc2()
+    print()
+    exc3()
 
 
 def main():
