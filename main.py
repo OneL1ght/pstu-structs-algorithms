@@ -1,3 +1,4 @@
+import random
 from typing import Callable, Any
 
 
@@ -72,8 +73,102 @@ def exc1():
         fun=intersection, check=check)
 
 
+def txt2words(text: str) -> list:
+    words = []
+    current = []
+    for ch in text:
+        if ch.isalpha():
+            current.append(ch.lower())
+        else:
+            if current:
+                words.append(''.join(current))
+                current = []
+    if current:
+        words.append(''.join(current))
+    return words
+
+
+def test_txt2words():
+    print_test("", out=[], fun=txt2words)
+    print_test("Hello, World!", out=["hello", "world"], fun=txt2words)
+    print_test("one two\nthree", out=["one", "two", "three"], fun=txt2words)
+    print_test("it's fine... really!", out=["it", "s", "fine", "really"], fun=txt2words)
+    print_test("a1b2c3", out=["a", "b", "c"], fun=txt2words)
+    print_test("Hello; world: how are you?", out=["hello", "world", "how", "are", "you"], fun=txt2words)
+    with open("assets/lab1exc2.txt", 'r') as f:
+        txt = "".join(f.readlines())
+        print_test(
+            txt,
+            out=["we", "study", "programming", "languages", "c", "c", "go", "we", "are", "programmers"],
+            fun=txt2words)
+
+
+def words2bigrams(words: list) -> dict:
+    bigrams = {}
+    for i in range(len(words) - 1):
+        key = words[i]
+        if key not in bigrams:
+            bigrams[key] = []
+        bigrams[key].append(words[i + 1])
+    return bigrams
+
+
+def test_words2bigrams():
+    check = lambda a, b: a == b
+    print_test([], out={}, fun=words2bigrams, check=check)
+    print_test(["hello"], out={}, fun=words2bigrams, check=check)
+    print_test(
+        ["we", "study"],
+        out={"we": ["study"]},
+        fun=words2bigrams, check=check)
+    print_test(
+        ["we", "study", "programming", "languages", "c", "c", "go", "we", "are", "programmers"],
+        out={
+            "we": ["study", "are"],
+            "study": ["programming"],
+            "programming": ["languages"],
+            "languages": ["c"],
+            "c": ["c", "go"],
+            "go": ["we"],
+            "are": ["programmers"],
+        },
+        fun=words2bigrams, check=check)
+    print_test(
+        ["a", "b", "a", "b"],
+        out={"a": ["b", "b"], "b": ["a"]},
+        fun=words2bigrams, check=check)
+
+
+def continue_sentence(bigrams: dict, word: str, n: int = 100):
+    word = word.lower()
+    if word not in bigrams:
+        print(f"Слово '{word}' не найдено в словаре")
+        return
+    result = [word]
+    current = word
+    for _ in range(n):
+        if current not in bigrams:
+            break
+        current = random.choice(bigrams[current])
+        result.append(current)
+    print(" ".join(result))
+
+
+def exc2():
+    # test_txt2words()
+    # print()
+    # test_words2bigrams()
+    # print()
+    with open("assets/lab1exc2.txt", 'r') as f:
+        bigrams = words2bigrams(txt2words(f.read()))
+    word = input("Введите слово: ")
+    continue_sentence(bigrams, word, 5)
+
+
 def lab1():
     exc1()
+    print()
+    exc2()
 
 
 def main():
